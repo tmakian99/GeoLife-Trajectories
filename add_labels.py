@@ -20,7 +20,7 @@ for i in range(182):
 
         # Load the .plt file into a DataFrame
         df = pd.read_csv(file_path, delimiter=',', header=None, skiprows=7,
-                         names=["Latitude", "Longitude", "Altitude", "Reserved_1", "Reserved_2", "Date", "Time"])
+                         names=["Latitude", "Longitude", "Reserved_1", "Altitude", "Reserved_2", "Date", "Time"])
 
         # Convert the Altitude column from feet to meters
         df['Altitude'] = df['Altitude'] * 0.3048
@@ -60,19 +60,21 @@ for i in range(182):
             file_path = os.path.join(folder_path, f)
             # Load the .plt file into a DataFrame
             df_labels = pd.read_csv(file_path, delimiter='\t', header=None, skiprows=1,
-                         names=["start_time", "end_time", "transportation_mode"])
+                                    names=["start_time", "end_time", "transportation_mode"])
             df_labels['user'] = "{:03d}".format(i)
             df_labels['start_time'] = pd.to_datetime(df_labels['start_time'], format='%Y/%m/%d %H:%M:%S')
             df_labels['end_time'] = pd.to_datetime(df_labels['end_time'], format='%Y/%m/%d %H:%M:%S')
             df_user = df[df['user'] == "{:03d}".format(i)]
             for j, row in df_labels.iterrows():
                 print('file: ' + str(i) + ' row ' + str(j) + ' of ' + str(len(df_labels)))
-                mask = (df_user['Datetime'] >= row['start_time'])
+                mask = (df_user['Datetime'] >= row['start_time']) and (df_user['Datetime'])
                 df_to_apply = df_user[mask]
                 df_user.loc[mask, 'label'] = df_to_apply['Datetime'].apply(lambda x: is_between(x, row))
             df_list_w_labels.append(df_user)
             break
 df_labels = pd.concat(df_list_w_labels)
+df_labels.dropna(subset=['label'], inplace=True)
+df_labels = df_labels[df_labels['label'] != '']
+df_labels.loc['sequence'] = (df_labels.loc['label'] != df_labels.loc['label'].shift()).cumsum()
 
 df_labels.to_pickle('df_labels.pkl')
-
