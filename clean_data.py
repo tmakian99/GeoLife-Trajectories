@@ -19,7 +19,9 @@ def create_sequences():
     df_labels = pd.read_pickle('df_labels.pkl')
 
     # Drop labels that we won't be using for training, and any data that is missing
-    df_labels.drop(['Altitude', 'Reserved_1', 'Reserved_2', 'user'], axis=1, inplace=True)
+    # get rid of the field 3
+    df_labels['Altitude'] = df_labels['Reserved_1']
+    df_labels.drop(['Reserved_1', 'Reserved_2', 'user'], axis=1, inplace=True)
     df_labels = df_labels[df_labels['label'] != '']
     df_labels.dropna(subset=['label'], inplace=True)
 
@@ -49,9 +51,12 @@ def create_sequences():
     # convert longitude and latitude to radians for more effective training
     # df_labels['Latitude'] = np.radians(df_labels['Latitude'])
     # df_labels['Longitude'] = np.radians(df_labels['Longitude'])
-    df_labels['x'] = np.cos(df_labels['Latitude']) * np.cos(df_labels['Longitude'])
-    df_labels['y'] = np.cos(df_labels['Latitude']) * np.sin(df_labels['Longitude'])
-    df_labels['z'] = np.sin(df_labels['Latitude'])
+    R = 6371
+    df_labels['Latitude'] = np.deg2rad(df_labels['Latitude'])
+    df_labels['Longitude'] = np.deg2rad(df_labels['Longitude'])
+    df_labels['x'] = R * np.cos(df_labels['Latitude']) * np.cos(df_labels['Longitude'])
+    df_labels['y'] = R * np.cos(df_labels['Latitude']) * np.sin(df_labels['Longitude'])
+    df_labels['z'] = R * np.sin(df_labels['Latitude'])
 
     # iterate through data and create numpy array of data for training
     print('Creating dataset...')
@@ -61,18 +66,25 @@ def create_sequences():
         new_sequence = df_labels[df_labels['sequence'] == i]
         for sequence in split_dataframe(new_sequence):
             if len(sequence) == 100:
-                df_sequence = pd.DataFrame(sequence)
                 # encode timedelta information
-                df_sequence.loc[:, 'timedelta'] = (df_sequence['Datetime'] - df_sequence['Datetime'].shift()) \
+                sequence.loc[:, 'timedelta'] = (sequence['Datetime'] - sequence['Datetime'].shift()) \
                     .fillna(pd.Timedelta('0 days')).dt.seconds.cumsum()
-                df_sequence.at[0, 'distance'] = 0
+                sequence.at[sequence.first_valid_index(), 'distance'] = 0
                 sequence_arrays.append(np.array([
                     sequence['x'],
                     sequence['y'],
                     sequence['z'],
-                    sequence['timedelta'],
-                    sequence['distance']]))
+                    sequence['timedelta'].dropna(),
+                    sequence['distance']
+                ]))
+
                 labels.append(sequence['label'].iloc[0])
 
     sequence_arrays = np.array(sequence_arrays)
     return sequence_arrays, labels
+
+
+if __name__ == '__main__':
+    sequence_data, label_array = create_sequences()
+    with open('seq_labels.npz', 'wb') as f:
+        np.savez(f, sequence_data, label_array)
