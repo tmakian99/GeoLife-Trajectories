@@ -4,7 +4,7 @@ from tensorflow.keras import layers
 import numpy as np
 from prepare_data import prepare_data
 
-x_train, y_train, x_test, y_test, scalers, num_classes = prepare_data('transformer')
+x_train, y_train, x_test, y_test, _, num_classes = prepare_data('transformer')
 
 
 # from keras nlp transformer encoder definition, based upon 'Attention is all you need' architecture:
@@ -109,30 +109,10 @@ def run_model():
         x_train,
         y_train,
         validation_split=0.2,
-        epochs=500,
+        epochs=100,
         batch_size=64,
         callbacks=callbacks,
     )
-
-    # fig_acc = plt.figure(figsize=(10, 10))
-    # plt.plot(history.history['loss'])
-    # plt.plot(history.history['val_loss'])
-    # plt.title('model loss')
-    # plt.ylabel('loss')
-    # plt.xlabel('epoch')
-    # plt.legend(['train', 'test'], loc='upper left')
-    # plt.show()
-    # fig_acc.savefig("Transformer_loss.png")
-    #
-    # fig_acc = plt.figure(figsize=(10, 10))
-    # plt.plot(history.history['sparse_categorical_accuracy'])
-    # plt.plot(history.history['val_sparse_categorical_accuracy'])
-    # plt.title('model accuracy')
-    # plt.ylabel('accuracy')
-    # plt.xlabel('epoch')
-    # plt.legend(['train', 'test'], loc='upper left')
-    # plt.show()
-    # fig_acc.savefig("Transformer_accuracy.png")
 
     model.evaluate(x_test, y_test, verbose=1)
 

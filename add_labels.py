@@ -48,30 +48,34 @@ def is_between(time, row_to_check):
         return row_to_check['transportation_mode']
 
 
-df_list_w_labels = []
-# add labels to df if they exist
-for i in range(182):
-    # Create the folder path for each folder
-    folder_path = "./Data/{:03d}".format(i)
-    # Check to see if a .txt file exists in the folder
-    for f in os.listdir(folder_path):
-        if f.endswith('.txt'):
-            file_path = os.path.join(folder_path, f)
-            # Load the .plt file into a DataFrame
-            df_labels = pd.read_csv(file_path, delimiter='\t', header=None, skiprows=1,
-                         names=["start_time", "end_time", "transportation_mode"])
-            df_labels['user'] = "{:03d}".format(i)
-            df_labels['start_time'] = pd.to_datetime(df_labels['start_time'], format='%Y/%m/%d %H:%M:%S')
-            df_labels['end_time'] = pd.to_datetime(df_labels['end_time'], format='%Y/%m/%d %H:%M:%S')
-            df_user = df[df['user'] == "{:03d}".format(i)]
-            for j, row in df_labels.iterrows():
-                print('file: ' + str(i) + ' row ' + str(j) + ' of ' + str(len(df_labels)))
-                mask = (df_user['Datetime'] >= row['start_time'])
-                df_to_apply = df_user[mask]
-                df_user.loc[mask, 'label'] = df_to_apply['Datetime'].apply(lambda x: is_between(x, row))
-            df_list_w_labels.append(df_user)
-            break
-df_labels = pd.concat(df_list_w_labels)
+def add_labels():
+    df_list_w_labels = []
+    # add labels to df if they exist
+    for i in range(182):
+        # Create the folder path for each folder
+        folder_path = "./Data/{:03d}".format(i)
+        # Check to see if a .txt file exists in the folder
+        for f in os.listdir(folder_path):
+            if f.endswith('.txt'):
+                file_path = os.path.join(folder_path, f)
+                # Load the .plt file into a DataFrame
+                df_labels = pd.read_csv(file_path, delimiter='\t', header=None, skiprows=1,
+                             names=["start_time", "end_time", "transportation_mode"])
+                df_labels['user'] = "{:03d}".format(i)
+                df_labels['start_time'] = pd.to_datetime(df_labels['start_time'], format='%Y/%m/%d %H:%M:%S')
+                df_labels['end_time'] = pd.to_datetime(df_labels['end_time'], format='%Y/%m/%d %H:%M:%S')
+                df_user = df[df['user'] == "{:03d}".format(i)]
+                for j, row in df_labels.iterrows():
+                    print('file: ' + str(i) + ' row ' + str(j) + ' of ' + str(len(df_labels)))
+                    mask = (df_user['Datetime'] >= row['start_time'])
+                    df_to_apply = df_user[mask]
+                    df_user.loc[mask, 'label'] = df_to_apply['Datetime'].apply(lambda x: is_between(x, row))
+                df_list_w_labels.append(df_user)
+                break
+    df_labels = pd.concat(df_list_w_labels)
 
-df_labels.to_pickle('df_labels.pkl')
+    df_labels.to_pickle('df_labels.pkl')
 
+
+if __name__ == '__main__':
+    add_labels()

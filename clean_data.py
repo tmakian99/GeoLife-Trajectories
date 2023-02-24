@@ -49,8 +49,6 @@ def create_sequences():
         df_labels.apply(lambda x: geopy.distance.geodesic(x['coordinate'], x['prev_coordinate']).km, axis=1)
 
     # convert longitude and latitude to radians for more effective training
-    # df_labels['Latitude'] = np.radians(df_labels['Latitude'])
-    # df_labels['Longitude'] = np.radians(df_labels['Longitude'])
     R = 6371
     df_labels['Latitude'] = np.deg2rad(df_labels['Latitude'])
     df_labels['Longitude'] = np.deg2rad(df_labels['Longitude'])
