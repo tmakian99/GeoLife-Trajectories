@@ -7,7 +7,7 @@ df_list = []
 # Loop over each of the 181 folders
 for i in range(182):
     # Create the folder path for each folder
-    folder_path = "./Data/{:03d}/Trajectory".format(i)
+    folder_path = "./data/{:03d}/Trajectory".format(i)
 
     # Get a list of all of the .plt files in the folder
     file_list = [f for f in os.listdir(folder_path) if f.endswith(".plt")]
@@ -30,8 +30,7 @@ for i in range(182):
         # Drop the original Date and Time columns
         df = df.drop(['Date', 'Time'], axis=1)
 
-        ## Add user column
-
+        # Add user column
         df['user'] = "{:03d}".format(i)
 
         # Append the loaded DataFrame to the list
@@ -53,14 +52,14 @@ def add_labels():
     # add labels to df if they exist
     for i in range(182):
         # Create the folder path for each folder
-        folder_path = "./Data/{:03d}".format(i)
+        folder_path = "./data/{:03d}".format(i)
         # Check to see if a .txt file exists in the folder
         for f in os.listdir(folder_path):
             if f.endswith('.txt'):
                 file_path = os.path.join(folder_path, f)
-                # Load the .plt file into a DataFrame
+                # Load the .txt file into a DataFrame
                 df_labels = pd.read_csv(file_path, delimiter='\t', header=None, skiprows=1,
-                             names=["start_time", "end_time", "transportation_mode"])
+                                        names=["start_time", "end_time", "transportation_mode"])
                 df_labels['user'] = "{:03d}".format(i)
                 df_labels['start_time'] = pd.to_datetime(df_labels['start_time'], format='%Y/%m/%d %H:%M:%S')
                 df_labels['end_time'] = pd.to_datetime(df_labels['end_time'], format='%Y/%m/%d %H:%M:%S')

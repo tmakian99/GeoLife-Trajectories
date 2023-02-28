@@ -16,7 +16,7 @@ def split_dataframe(df, chunk_size=100):
 def create_sequences():
     # Load labelled data
     print('Loading dataset...')
-    df_labels = pd.read_pickle('df_labels.pkl')
+    df_labels = pd.read_pickle('./data/df_labels.pkl')
 
     # Drop labels that we won't be using for training, and any data that is missing
     # get rid of the field 3
@@ -84,5 +84,5 @@ def create_sequences():
 
 if __name__ == '__main__':
     sequence_data, label_array = create_sequences()
-    with open('seq_labels.npz', 'wb') as f:
+    with open('../data/seq_labels.npz', 'wb') as f:
         np.savez(f, sequence_data, label_array)

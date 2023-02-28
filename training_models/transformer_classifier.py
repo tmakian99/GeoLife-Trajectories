@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
 from tensorflow import keras
 from tensorflow.keras import layers
-import numpy as np
-from prepare_data import prepare_data
+from data_cleaning.prepare_data import prepare_data
+from data_presentation.plot_model_history import plot_model_history
 
 x_train, y_train, x_test, y_test, _, num_classes = prepare_data('transformer')
 
@@ -70,49 +69,50 @@ def build_model(
     # Global pooling to reduce dimensions down to that of the number of classes
     x = layers.GlobalAveragePooling1D(data_format="channels_first")(x)
     x = layers.Dense(128, activation="relu")(x)
-    x = layers.Dropout(0.4)(x)
+    x = layers.Dropout(0.5)(x)
     outputs = layers.Dense(num_classes, activation="softmax")(x)
     return keras.Model(inputs, outputs)
 
 
-input_shape = x_train.shape[1:]
-
-model = build_model(
-    input_shape,
-    num_heads=4,
-    num_transformer_blocks=4,
-    dropout=0.25
-)
-
-# Using legacy Adam optimizer because of macOS compatibility issues
-model.compile(
-    loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.legacy.Adam(learning_rate=1e-4),
-    metrics=["sparse_categorical_accuracy"],
-)
-model.summary()
-
-# Reduce learning rate on plateau allows for better approximation of local minimum
-callbacks = [keras.callbacks.EarlyStopping(patience=20, restore_best_weights=True),
-             keras.callbacks.ModelCheckpoint('transformer_model.h5',
-                                             monitor='val_loss',
-                                             save_best_only=True,
-                                             mode='min',
-                                             verbose=1),
-             keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                                               patience=8, min_lr=1e-6)
-             ]
-
-
 def run_model():
+    input_shape = x_train.shape[1:]
+
+    model = build_model(
+        input_shape,
+        num_heads=4,
+        num_transformer_blocks=4,
+        dropout=0.25
+    )
+
+    # Using legacy Adam optimizer because of macOS compatibility issues
+    model.compile(
+        loss="sparse_categorical_crossentropy",
+        optimizer=keras.optimizers.legacy.Adam(learning_rate=1e-4),
+        metrics=["sparse_categorical_accuracy"],
+    )
+    model.summary()
+
+    # Reduce learning rate on plateau allows for better approximation of local minimum
+    callbacks = [keras.callbacks.EarlyStopping(patience=20, restore_best_weights=True),
+                 keras.callbacks.ModelCheckpoint('transformer_model_3.h5',
+                                                 monitor='val_loss',
+                                                 save_best_only=True,
+                                                 mode='min',
+                                                 verbose=1),
+                 keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                                   patience=8, min_lr=1e-6)
+                 ]
+
     history = model.fit(
         x_train,
         y_train,
         validation_split=0.2,
-        epochs=100,
+        epochs=200,
         batch_size=64,
         callbacks=callbacks,
     )
+
+    plot_model_history(history)
 
     model.evaluate(x_test, y_test, verbose=1)
 

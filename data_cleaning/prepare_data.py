@@ -5,7 +5,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 def prepare_data(model_type):
     # Create sequences
-    data_files = np.load('seq_labels.npz')
+    data_files = np.load('./data/seq_labels.npz')
     sequences = data_files['arr_0']
     labels = data_files['arr_1']
 
